@@ -1,0 +1,13 @@
+# Ignorar node_modules
+node_modules/
+
+# Ignorar la carpeta de salida de TypeScript
+dist/
+
+# Ignorar archivos de configuración de IDEs (ej. Visual Studio Code)
+.vscode/
+.idea/
+
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
