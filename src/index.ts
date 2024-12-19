@@ -40,44 +40,42 @@ const ExcelTables4Js = async (
               const [start, end] = tableRange.split(':');
               const [startCol, startRow] = start.split(/(\d+)/);
               const [endCol, endRow] = end.split(/(\d+)/);
-              returnData = { data: [] };
+              const totalColumns = countColumns(startCol, endCol);
+              const columnsArray = excelColumns(startCol, totalColumns);
+              
+    
 
               if (_isColumnsObjects) {
                 const columns: string[] = [];
-                for (let j = startCol.charCodeAt(0); j <= endCol.charCodeAt(0); j++) {
-                  const cell = sheet.getCell(String.fromCharCode(j) + startRow);
-                  columns.push(cell.value as string);
-                }
-
-                const data: { [key: string]: any[] } = {};
-                for (let i = parseInt(startRow) + 1; i <= parseInt(endRow); i++) {
-                  for (let j = startCol.charCodeAt(0); j <= endCol.charCodeAt(0); j++) {
-                    const cell = sheet.getCell(String.fromCharCode(j) + i);
-                    const columnName = columns[j - startCol.charCodeAt(0)];
-                    if (!data[columnName]) {
-                      data[columnName] = [];
-                    }
-                    data[columnName].push(cell.value);
+                const dataObject:any = {};
+                columnsArray.forEach((column) => {
+                  const cell = sheet.getCell(column + startRow);
+                  const columnName = cell.value as string;
+                  columns.push(columnName);
+                  dataObject[columnName] = [];
+                  for (let i = parseInt(startRow)+1; i <= parseInt(endRow); i++) {
+                    const cell = sheet.getCell(column + i);
+                    dataObject[columnName].push(cell.value);
                   }
-                }
-                returnData.columns = columns;
-                // @ts-ignore
-                returnData.data = data;
+                });
+                returnData = { columns, data: dataObject };
               } else {
+                //ahora como arreglo de arreglos
                 const data: any[] = [];
                 for (let i = parseInt(startRow); i <= parseInt(endRow); i++) {
-                  const row: any[] = [];
-                  for (let j = startCol.charCodeAt(0); j <= endCol.charCodeAt(0); j++) {
-                    const cell = sheet.getCell(String.fromCharCode(j) + i);
+                  // @ts-ignore
+                  const row = [];
+                  columnsArray.forEach((column) => {
+                    const cell = sheet.getCell(column + i);
                     row.push(cell.value);
-                  }
+                  });
+                  // @ts-ignore
                   data.push(row);
                 }
-                returnData.data = data;
+                returnData = { columns: data[0], data };
               }
             }
           });
-
           resolve(returnData || null);
         } catch (err) {
           reject(null);
@@ -92,3 +90,48 @@ const ExcelTables4Js = async (
 };
 
 export default ExcelTables4Js;
+
+function columnToNumber(column: string): number {
+  let columnNumber = 0;
+  for (let i = 0; i < column.length; i++) {
+    columnNumber = columnNumber * 26 + (column.charCodeAt(i) - 'A'.charCodeAt(0) + 1);
+  }
+  return columnNumber;
+}
+
+function countColumns(start: string, end: string): number {
+  const startNumber = columnToNumber(start);
+  const endNumber = columnToNumber(end);
+  return endNumber - startNumber + 1;
+}
+
+function excelColumns(startColumn: string, numberOfColumns: number): string[] {
+  // Convierte la columna de inicio a un número (A=1, B=2, ..., Z=26, AA=27, ...)
+  function columnToNumber(column: string): number {
+    let number = 0;
+    for (let i = 0; i < column.length; i++) {
+      number = number * 26 + (column.charCodeAt(i) - 'A'.charCodeAt(0) + 1);
+    }
+    return number;
+  }
+
+  // Convierte un número a una columna de Excel
+  function numberToColumn(number: number): string {
+    let column = '';
+    while (number > 0) {
+      number--;
+      column = String.fromCharCode(number % 26 + 'A'.charCodeAt(0)) + column;
+      number = Math.floor(number / 26);
+    }
+    return column;
+  }
+
+  const startColumnNumber = columnToNumber(startColumn);
+  const result: string[] = [];
+
+  for (let i = 0; i < numberOfColumns; i++) {
+    result.push(numberToColumn(startColumnNumber + i));
+  }
+
+  return result;
+}
