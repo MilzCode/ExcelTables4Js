@@ -1,6 +1,6 @@
 {
   "name": "exceltables4js",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Convierte un objeto de tabla Excel a JSON.",
   "main": "dist/index.js", 
   "types": "dist/index.d.ts", 
