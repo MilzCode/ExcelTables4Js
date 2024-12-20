@@ -6,6 +6,7 @@ import ExcelJS from 'exceljs';
  * @param _file - Archivo Excel a procesar.
  * @param _tableName - Nombre de la tabla dentro del Excel a extraer.
  * @param _isColumnsObjects - Si es `true`, retorna datos estructurados en objetos con columnas como claves.
+ * @param customDataFunction - Función personalizada para procesar los datos de las celdas.
  * @returns Objeto JSON con los datos extraídos o `null` si no se encuentra la tabla o hay errores.
  */
 const ExcelTables4Js = async (
