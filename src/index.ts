@@ -9,10 +9,11 @@ import ExcelJS from 'exceljs';
  * @returns Objeto JSON con los datos extraídos o `null` si no se encuentra la tabla o hay errores.
  */
 const ExcelTables4Js = async (
-  _file: File, 
-  _tableName: string, 
-  _isColumnsObjects: boolean = false
-): Promise<{columns?: string[]; data: any[]} | null> => {
+  _file: File,
+  _tableName: string,
+  _isColumnsObjects: boolean = false,
+  customDataFunction?: (data: any,columnTitle:any) => any
+): Promise<{ columns?: string[]; data: any[] } | null> => {
   if (!_file) {
     return null;
   }
@@ -27,13 +28,13 @@ const ExcelTables4Js = async (
           const arrayBuffer = e.target?.result as ArrayBuffer;
           await workbook.xlsx.load(arrayBuffer);
           const sheets = workbook.worksheets;
-          let returnData: {columns?: string[]; data: any[]} | null = null;
+          let returnData: { columns?: string[]; data: any[] } | null = null;
 
           sheets.forEach((sheet) => {
             // @ts-ignore
             const tables = sheet.tables;
             const tableNames = Object.keys(tables);
-
+            const fileName = _file.name;
             if (tableNames.includes(_tableName)) {
               const table = tables[_tableName].table;
               const tableRange = table.tableRef;
@@ -42,20 +43,32 @@ const ExcelTables4Js = async (
               const [endCol, endRow] = end.split(/(\d+)/);
               const totalColumns = countColumns(startCol, endCol);
               const columnsArray = excelColumns(startCol, totalColumns);
-              
-    
+              const nameFileSourceColumn = "__fileSourceName"
+
+
 
               if (_isColumnsObjects) {
                 const columns: string[] = [];
-                const dataObject:any = {};
-                columnsArray.forEach((column) => {
+                const dataObject: any = {};
+                columns.push(nameFileSourceColumn)
+                dataObject[nameFileSourceColumn] = [];
+                
+                
+                
+                columnsArray.forEach((column,idx) => {
                   const cell = sheet.getCell(column + startRow);
                   const columnName = cell.value as string;
                   columns.push(columnName);
                   dataObject[columnName] = [];
-                  for (let i = parseInt(startRow)+1; i <= parseInt(endRow); i++) {
+                  for (let i = parseInt(startRow) + 1; i <= parseInt(endRow); i++) {
                     const cell = sheet.getCell(column + i);
-                    dataObject[columnName].push(cell.value);
+                    const value = fixerData(cell.value,columnName,customDataFunction)
+                    dataObject[columnName].push(value);
+                    if (
+                      idx === 0
+                    ) {
+                      dataObject[nameFileSourceColumn].push(fileName)
+                    }
                   }
                 });
                 returnData = { columns, data: dataObject };
@@ -67,17 +80,28 @@ const ExcelTables4Js = async (
                   const row = [];
                   columnsArray.forEach((column) => {
                     const cell = sheet.getCell(column + i);
-                    row.push(cell.value);
+                    const columnName = sheet.getCell(column + startRow).value as string;
+                    let value = cell.value;
+                    if (i !== parseInt(startRow)) {
+                      value = fixerData(cell.value,columnName,customDataFunction)
+                    }
+                    row.push(value);
                   });
                   // @ts-ignore
                   data.push(row);
+                  if (i === parseInt(startRow)) {
+                    data[0].push(nameFileSourceColumn)
+                  } else {
+                    data[data.length - 1].push(fileName)
+                  }
                 }
-                returnData = { columns: data[0], data };
+                returnData = { columns: data[0], data: data.slice(1) };
               }
             }
           });
           resolve(returnData || null);
         } catch (err) {
+          console.error(err);
           reject(null);
         }
       };
@@ -85,6 +109,7 @@ const ExcelTables4Js = async (
       reader.readAsArrayBuffer(_file);
     });
   } catch (err) {
+    console.error(err);
     return null;
   }
 };
@@ -134,4 +159,14 @@ function excelColumns(startColumn: string, numberOfColumns: number): string[] {
   }
 
   return result;
+}
+
+const fixerData = (cellValue: any,column:string,customDataFunction:any) => {
+  const value_string = cellValue === null ? null : String(cellValue).trim();
+  let value = value_string === "" ? null : value_string;
+  if (customDataFunction) {
+    const outputFn = customDataFunction(value,column)
+    value = outputFn
+  }
+  return value
 }
