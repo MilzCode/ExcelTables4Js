@@ -1,6 +1,6 @@
 {
   "name": "exceltables4js",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Convierte un objeto de tabla Excel a JSON.",
   "main": "dist/index.js", 
   "types": "dist/index.d.ts", 
@@ -19,6 +19,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tu-usuario/mi-paquete-excel-to-json.git"
+    "url": "https://github.com/MilzCode/ExcelTables4Js"
   }
 }
