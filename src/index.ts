@@ -45,6 +45,8 @@ const ExcelTables4Js = async (
               const totalColumns = countColumns(startCol, endCol);
               const columnsArray = excelColumns(startCol, totalColumns);
               const nameFileSourceColumn = "__fileSourceName"
+              const nameColumnRow = "__row"
+
 
 
 
@@ -53,8 +55,8 @@ const ExcelTables4Js = async (
                 const dataObject: any = {};
                 columns.push(nameFileSourceColumn)
                 dataObject[nameFileSourceColumn] = [];
-                
-                
+                columns.push(nameColumnRow)
+                dataObject[nameColumnRow] = [];
                 
                 columnsArray.forEach((column,idx) => {
                   const cell = sheet.getCell(column + startRow);
@@ -69,7 +71,9 @@ const ExcelTables4Js = async (
                       idx === 0
                     ) {
                       dataObject[nameFileSourceColumn].push(fileName)
+                      dataObject[nameColumnRow].push(i)
                     }
+
                   }
                 });
                 returnData = { columns, data: dataObject };
@@ -92,8 +96,10 @@ const ExcelTables4Js = async (
                   data.push(row);
                   if (i === parseInt(startRow)) {
                     data[0].push(nameFileSourceColumn)
+                    data[0].push(nameColumnRow)
                   } else {
                     data[data.length - 1].push(fileName)
+                    data[data.length - 1].push(i)
                   }
                 }
                 returnData = { columns: data[0], data: data.slice(1) };
