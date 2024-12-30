@@ -123,7 +123,8 @@ const ExcelTables4Js = async (
 
 export default ExcelTables4Js;
 
-function columnToNumber(column: string): number {
+// Convierte la columna de inicio a un número (A=1, B=2, ..., Z=26, AA=27, ...)
+export function columnToNumber(column: string): number {
   let columnNumber = 0;
   for (let i = 0; i < column.length; i++) {
     columnNumber = columnNumber * 26 + (column.charCodeAt(i) - 'A'.charCodeAt(0) + 1);
@@ -131,24 +132,14 @@ function columnToNumber(column: string): number {
   return columnNumber;
 }
 
-function countColumns(start: string, end: string): number {
+export function countColumns(start: string, end: string): number {
   const startNumber = columnToNumber(start);
   const endNumber = columnToNumber(end);
   return endNumber - startNumber + 1;
 }
 
-function excelColumns(startColumn: string, numberOfColumns: number): string[] {
-  // Convierte la columna de inicio a un número (A=1, B=2, ..., Z=26, AA=27, ...)
-  function columnToNumber(column: string): number {
-    let number = 0;
-    for (let i = 0; i < column.length; i++) {
-      number = number * 26 + (column.charCodeAt(i) - 'A'.charCodeAt(0) + 1);
-    }
-    return number;
-  }
-
   // Convierte un número a una columna de Excel
-  function numberToColumn(number: number): string {
+export function numberToColumn(number: number): string {
     let column = '';
     while (number > 0) {
       number--;
@@ -158,6 +149,8 @@ function excelColumns(startColumn: string, numberOfColumns: number): string[] {
     return column;
   }
 
+function excelColumns(startColumn: string, numberOfColumns: number): string[] {
+  
   const startColumnNumber = columnToNumber(startColumn);
   const result: string[] = [];
 
