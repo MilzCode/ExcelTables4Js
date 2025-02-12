@@ -13,7 +13,7 @@ const ExcelTables4Js = async (
   _file: File,
   _tableName: string,
   _isColumnsObjects: boolean = false,
-  customDataFunction?: (data: any,columnTitle:any) => any
+  customDataFunction?: (data: any, columnTitle: any) => any
 ): Promise<{ columns?: string[]; data: any[] } | null> => {
   if (!_file) {
     return null;
@@ -46,8 +46,7 @@ const ExcelTables4Js = async (
               const columnsArray = excelColumns(startCol, totalColumns);
               const nameFileSourceColumn = "__fileSourceName"
               const nameColumnRow = "__row"
-
-
+              const tableNameColumnName = '__tableName';
 
 
               if (_isColumnsObjects) {
@@ -57,21 +56,24 @@ const ExcelTables4Js = async (
                 dataObject[nameFileSourceColumn] = [];
                 columns.push(nameColumnRow)
                 dataObject[nameColumnRow] = [];
-                
-                columnsArray.forEach((column,idx) => {
+                columns.push(tableNameColumnName)
+                dataObject[tableNameColumnName] = [];
+
+                columnsArray.forEach((column, idx) => {
                   const cell = sheet.getCell(column + startRow);
                   const columnName = cell.value as string;
                   columns.push(columnName);
                   dataObject[columnName] = [];
                   for (let i = parseInt(startRow) + 1; i <= parseInt(endRow); i++) {
                     const cell = sheet.getCell(column + i);
-                    const value = fixerData(cell.value,columnName,customDataFunction)
+                    const value = fixerData(cell.value, columnName, customDataFunction)
                     dataObject[columnName].push(value);
                     if (
                       idx === 0
                     ) {
                       dataObject[nameFileSourceColumn].push(fileName)
                       dataObject[nameColumnRow].push(i)
+                      dataObject[tableNameColumnName].push(_tableName)
                     }
 
                   }
@@ -88,7 +90,7 @@ const ExcelTables4Js = async (
                     const columnName = sheet.getCell(column + startRow).value as string;
                     let value = cell.value;
                     if (i !== parseInt(startRow)) {
-                      value = fixerData(cell.value,columnName,customDataFunction)
+                      value = fixerData(cell.value, columnName, customDataFunction)
                     }
                     row.push(value);
                   });
@@ -97,9 +99,11 @@ const ExcelTables4Js = async (
                   if (i === parseInt(startRow)) {
                     data[0].push(nameFileSourceColumn)
                     data[0].push(nameColumnRow)
+                    data[0].push(tableNameColumnName)
                   } else {
                     data[data.length - 1].push(fileName)
                     data[data.length - 1].push(i)
+                    data[data.length - 1].push(_tableName)
                   }
                 }
                 returnData = { columns: data[0], data: data.slice(1) };
@@ -138,19 +142,19 @@ export function countColumns(start: string, end: string): number {
   return endNumber - startNumber + 1;
 }
 
-  // Convierte un número a una columna de Excel
+// Convierte un número a una columna de Excel
 export function numberToColumn(number: number): string {
-    let column = '';
-    while (number > 0) {
-      number--;
-      column = String.fromCharCode(number % 26 + 'A'.charCodeAt(0)) + column;
-      number = Math.floor(number / 26);
-    }
-    return column;
+  let column = '';
+  while (number > 0) {
+    number--;
+    column = String.fromCharCode(number % 26 + 'A'.charCodeAt(0)) + column;
+    number = Math.floor(number / 26);
   }
+  return column;
+}
 
 function excelColumns(startColumn: string, numberOfColumns: number): string[] {
-  
+
   const startColumnNumber = columnToNumber(startColumn);
   const result: string[] = [];
 
@@ -161,11 +165,11 @@ function excelColumns(startColumn: string, numberOfColumns: number): string[] {
   return result;
 }
 
-const fixerData = (cellValue: any,column:string,customDataFunction:any) => {
+const fixerData = (cellValue: any, column: string, customDataFunction: any) => {
   const value_string = cellValue === null ? null : String(cellValue).trim();
   let value = value_string === "" ? null : value_string;
   if (customDataFunction) {
-    const outputFn = customDataFunction(value,column)
+    const outputFn = customDataFunction(value, column)
     value = outputFn
   }
   return value
